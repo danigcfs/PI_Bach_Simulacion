@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Espacial - Clara García</title>
+    <!-- Librería de gráficas (necesita conexión a internet) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<!-- TUTORIAL PASO A PASO ANIMADO CON FOCO -->
+<div id="modal-inicio"></div>
+<div class="instrucciones-box pos-center" id="box-tutorial">
+    <h1 id="tut-titulo">🚀 Simulador de Vuelo</h1>
+    <div id="texto-paso-container">
+        <p>Te damos la bienvenida al Centro de Control.</p>
+        <p>Como responsable de la misión, deberás aplicar los conceptos de física y aerodinámica para guiar este cohete hasta la órbita de forma segura.</p>
+    </div>
+    <div class="controles-tutorial">
+        <button id="btn-saltar" class="btn-tut" onclick="saltarTutorial()">Saltar tutorial</button>
+        <button id="btn-ant" class="btn-tut" style="display:none;" onclick="cambiarPaso(-1)">Anterior</button>
+        <button id="btn-sig" class="btn-tut" onclick="cambiarPaso(1)">Siguiente</button>
+    </div>
+</div>
+
+<div id="simulador-ui">
+    <!-- PANEL IZQUIERDO -->
+    <div id="panel-izq" class="panel-z">
+        <h2>CONFIGURACIÓN</h2>
+        <div class="box" id="box-motor">
+            <label style="font-weight: bold; color: #ccc;">TIPO DE MOTOR:</label>
+            <select id="selector-motor">
+                <option value="liquido">Líquido (Control Manual Total)</option>
+                <option value="hibrido">Híbrido (Mixto)</option>
+                <option value="solido">Sólido (Automático en Max-Q)</option>
+            </select>
+        </div>
+
+        <h2>COPILOTO (Avisos)</h2>
+        <div id="panel-alertas" class="alerta-normal">SISTEMAS NOMINALES.<br>Sube la palanca de potencia para despegar.</div>
+
+        <h2>TELEMETRÍA</h2>
+        <div class="box" id="box-telemetria">
+            <div class="dato-fila"><span>CAPA:</span> <span class="capa-val" id="t-capa">PLATAFORMA</span></div>
+            <div class="dato-fila"><span>PRES. ATM.:</span> <span class="dato-val" id="t-pres">1013 hPa</span></div>
+            <div class="dato-fila"><span>PRES. DINÁMICA (q):</span> <span class="dato-val" id="t-q">0.0 / 17.5 kPa</span></div>
+            <div class="dato-fila"><span>EMPUJE:</span> <span class="dato-val" id="t-emp">0 kN</span></div>
+            <div class="dato-fila"><span>Δv IDEAL (Tsiolkovski):</span> <span class="dato-val" id="t-dv">0 m/s</span></div>
+            <div class="dato-fila"><span>TIEMPO:</span> <span class="dato-val" id="t-tiempo">0.0 s</span></div>
+            <div class="dato-fila"><span>ALTITUD:</span> <span class="dato-val" id="t-alt">0 m</span></div>
+            <div class="dato-fila"><span>VELOCIDAD:</span> <span class="dato-val" id="t-vel">0 m/s</span></div>
+            <div class="dato-fila"><span>ACELERACIÓN:</span> <span class="dato-val" id="t-acc">0 m/s²</span></div>
+            <div class="dato-fila"><span>ESTABILIDAD:</span> <span class="dato-val" id="t-ang">0.0°</span></div>
+        </div>
+    </div>
+
+    <!-- PANTALLA CENTRAL -->
+    <div id="pantalla-central" class="panel-z">
+        <div id="minimapa">
+            <div class="mini-capa" id="m-exo"><span>EXOSFERA</span></div>
+            <div class="mini-capa" id="m-ter"><span>TERMOSFERA</span></div>
+            <div class="mini-capa" id="m-mes"><span>MESOSFERA</span></div>
+            <div class="mini-capa" id="m-est"><span>ESTRATOSFERA</span></div>
+            <div class="mini-capa activa" id="m-tro" style="border-bottom: 2px solid #2e7d32;"><span>TROPOSFERA</span></div>
+            <div id="mini-marcador"></div>
+        </div>
+
+        <div class="barra-lateral-container" id="caja-barra-masa">
+            <div class="barra-label">MASA</div>
+            <div class="barra-fill" id="fill-masa"></div>
+        </div>
+        
+        <div class="barra-lateral-container" id="caja-barra-comb">
+            <div class="barra-label">COMB.</div>
+            <div class="barra-fill" id="fill-comb"></div>
+        </div>
+
+        <div id="alerta-pantalla">¡REDUCE POTENCIA! MAX-Q</div>
+        <div id="mensaje-orbita">🚀 MISIÓN TERMINADA 🚀<br><span style="font-size: 20px; color:white;">Órbita estable alcanzada</span></div>
+        <div id="explosion">💥</div>
+
+        <div class="pedazo-basura" id="b1" style="top: 15%; font-size: 35px;">🛰️</div>
+        <div class="pedazo-basura" id="b2" style="top: 25%; font-size: 25px;">⚙️</div>
+        <div class="pedazo-basura" id="b3" style="top: 35%; font-size: 40px;">🛸</div>
+        <div class="pedazo-basura" id="b4" style="top: 10%; font-size: 20px;">⚙️</div>
+
+        <div id="carga-suelta">🛰️</div>
+
+        <div id="etapa1-cayendo">
+            <div class="separador"></div>
+            <div class="etapa1"><span class="texto-e1">ETAPA 1</span><div class="aleta-izq"></div><div class="aleta-der"></div></div>
+            <div class="tobera"></div>
+        </div>
+
+        <div id="cohete-ensamblaje">
+            <div id="cohete-rotacion">
+                <div class="ojiva" id="obj-carga"></div>
+                <div id="bloque-etapa2">
+                    <div class="etapa2"><span class="texto-e2">ETAPA 2</span></div>
+                    <div class="tobera" id="tobera-e2" style="width:14px; height:8px; display:none;"></div>
+                    <div class="fuego-e2" id="fuego-motor2"></div>
+                </div>
+                <div id="bloque-etapa1">
+                    <div class="separador"></div>
+                    <div class="etapa1"><span class="texto-e1">ETAPA 1</span><div class="aleta-izq"></div><div class="aleta-der"></div></div>
+                    <div class="tobera"></div>
+                    <div class="fuego-e1" id="fuego-motor1"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="suelo"></div>
+    </div>
+
+    <!-- PANEL DERECHO -->
+    <div id="panel-der" class="panel-z">
+        <h2>PALANCA DE CAMBIOS</h2>
+        
+        <div class="controles-motor-wrapper" id="contenedor-general-motor">
+            <div class="throttle-container" id="contenedor-palanca">
+                <div class="ranura-palanca">
+                    <input type="range" id="acelerador" min="0" max="100" value="0">
+                </div>
+                <div style="margin-top: 15px; font-weight: bold; font-size: 16px; color: var(--accent);">POTENCIA: <span id="txt-pot">0</span>%</div>
+            </div>
+            
+            <div id="panel-solido-start">
+                <p style="font-size: 14px; color: #ff9999; margin: 0 0 15px 0;">El motor sólido opera a potencia máxima y no se puede regular.</p>
+                <button id="btn-start-solido" onclick="iniciarSolido()">🚀 START MÁXIMO</button>
+                <div style="margin-top: 15px; font-weight: bold; font-size: 16px; color: var(--danger);">POTENCIA: <span id="txt-pot-solido">0</span>%</div>
+            </div>
+        </div>
+
+        <div id="panel-tvc">
+            <p id="ind-viento">VIENTO: CALMA (0 m/s)</p>
+            <button class="btn-tvc" id="btn-izq" onmousedown="teclas.izq=true; actualizarTVC()" onmouseup="teclas.izq=false; actualizarTVC()" onmouseleave="teclas.izq=false; actualizarTVC()">◀ (A)</button>
+            <button class="btn-tvc" id="btn-der" onmousedown="teclas.der=true; actualizarTVC()" onmouseup="teclas.der=false; actualizarTVC()" onmouseleave="teclas.der=false; actualizarTVC()">(D) ▶</button>
+        </div>
+
+        <!-- Botones HTML con clase de inicio apagado -->
+        <button class="btn-juego btn-apagado" id="btn-separar" onclick="ejecutarSeparacion()">SEPARAR ETAPA 1</button>
+        <button class="btn-juego btn-apagado" id="btn-carga" onclick="liberarCarga()">SOLTAR CARGA ÚTIL</button>
+        
+        <button class="btn-accion" style="margin-top: auto;" onclick="finalizarMision('Misión Abortada', 'Finalizada por la operadora.')">VER GRÁFICAS</button>
+    </div>
+</div>
+
+<!-- ANÁLISIS DE MISIÓN -->
+<div id="panel-resultados">
+    <h1 id="res-titulo" style="font-size: 32px; color: var(--accent);">ANÁLISIS DE LA MISIÓN</h1>
+    <p id="res-motivo" style="color: #ccc; text-align: center; font-size: 18px; margin-bottom: 20px;"></p>
+    <button class="btn-accion" style="width: 250px; margin-bottom: 20px;" onclick="location.reload()">VOLVER A JUGAR</button>
+    
+    <div id="res-tsiolkovski">
+        <h3>ECUACIÓN DE TSIOLKOVSKI DEL VUELO</h3>
+        <p>Δv ideal = Σ Ve_ef · ln(m<sub>0</sub> / m<sub>f</sub>) &nbsp;→&nbsp; velocidad final = Δv ideal − pérdidas por gravedad − pérdidas por rozamiento</p>
+        <div class="dato-fila"><span>Δv ideal (Tsiolkovski):</span> <span class="dato-val" id="res-dv-ideal"></span></div>
+        <div class="dato-fila"><span>Pérdidas por gravedad:</span> <span class="dato-val" id="res-dv-grav"></span></div>
+        <div class="dato-fila"><span>Pérdidas por rozamiento:</span> <span class="dato-val" id="res-dv-roce"></span></div>
+        <div class="dato-fila"><span>Velocidad final:</span> <span class="dato-val" id="res-dv-real"></span></div>
+    </div>
+
+    <div class="grid-graficas">
+        <div class="canvas-container" title="Haz clic para ampliar" onclick="ampliarGrafica('altitud')"><canvas id="grafico-altitud"></canvas></div>
+        <div class="canvas-container" title="Haz clic para ampliar" onclick="ampliarGrafica('velocidad')"><canvas id="grafico-velocidad"></canvas></div>
+        <div class="canvas-container" title="Haz clic para ampliar" onclick="ampliarGrafica('aceleracion')"><canvas id="grafico-aceleracion"></canvas></div>
+        <div class="canvas-container bottom-row" title="Haz clic para ampliar" onclick="ampliarGrafica('combustible')"><canvas id="grafico-combustible"></canvas></div>
+        <div class="canvas-container bottom-row" title="Haz clic para ampliar" onclick="ampliarGrafica('masa')"><canvas id="grafico-masa"></canvas></div>
+    </div>
+    <p id="res-ayuda">🔍 Haz clic en cualquier gráfica para ampliarla y ver su explicación.</p>
+</div>
+
+<!-- Gráfica ampliada con su explicación -->
+<div id="modal-grafica" onclick="if (event.target === this) cerrarGrafica()">
+    <div class="modal-grafica-contenido">
+        <button id="cerrar-grafica" onclick="cerrarGrafica()" title="Cerrar (Esc)">✕</button>
+        <div class="modal-grafica-chart"><canvas id="grafico-ampliado"></canvas></div>
+        <div class="modal-grafica-info">
+            <h2 id="mg-titulo"></h2>
+            <h3>Qué muestra</h3>
+            <div id="mg-descripcion"></div>
+            <h3>En qué fijarse</h3>
+            <ul id="mg-fijarse"></ul>
+            <p id="mg-informe"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pausa Didáctica Sólido -->
+<div id="modal-info">
+    <div class="modal-contenido">
+        <h2 class="modal-titulo">Pausa Didáctica: El Grano Sólido</h2>
+        <ul>
+            <li>El motor de propelente sólido usa un bloque continuo llamado <strong>"grano"</strong>.</li>
+            <li>Su desventaja principal es que <strong>no se puede apagar ni regular</strong> con válvulas una vez se enciende.</li>
+            <li><strong>¿Cómo sobrevive al Max-Q?</strong> Los ingenieros moldean el interior del grano geométricamente. Al quemarse, el área expuesta al fuego cambia, lo que <strong>reduce el empuje automáticamente</strong> justo cuando la presión dinámica (q) es máxima.</li>
+        </ul>
+        <button class="modal-btn" onclick="reanudarSimulacion()">ENTENDIDO (Reanudar Vuelo)</button>
+    </div>
+</div>
+
+    <!-- Scripts (el orden importa: comparten variables globales) -->
+    <script src="js/tutorial.js"></script>   <!-- Tutorial inicial -->
+    <script src="js/estado.js"></script>     <!-- Constantes, estado y referencias al DOM -->
+    <script src="js/controles.js"></script>  <!-- Teclado, TVC, selector de motor -->
+    <script src="js/acciones.js"></script>   <!-- Separar etapa, soltar carga, fin de misión -->
+    <script src="js/graficas.js"></script>   <!-- Panel de resultados y gráficas -->
+    <script src="js/fisica.js"></script>     <!-- Bucle de física y actualización de la pantalla -->
+</body>
+</html>

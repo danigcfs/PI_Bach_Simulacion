@@ -1,0 +1,205 @@
+/* ==========================================================
+   SIMULADOR ESPACIAL - HOJA DE ESTILOS
+   Índice: 1 Variables/base · 2 Tutorial · 3 Paneles laterales
+           4 Pantalla central · 5 Cohete · 6 Controles
+           7 Resultados · 8 Modal didáctico
+   ========================================================== */
+
+/* 1. VARIABLES Y BASE */
+:root { --bg-dark: #121212; --panel-bg: #1e1e1e; --accent: #4da6ff; --danger: #ff4444; --success: #00ff00; }
+body { margin: 0; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-dark); color: white; display: flex; height: 100vh; overflow: hidden; user-select: none; }
+
+/* 2. TUTORIAL (caja de instrucciones, flechas y foco) */
+/* Instrucciones Dinámicas con Flechas */
+#modal-inicio { position: absolute; z-index: 10000; inset: 0; background: rgba(0,0,0,0.6); transition: opacity 0.5s; display: block; }
+.instrucciones-box { position: absolute; background: #222; padding: 30px; border-radius: 12px; border: 2px solid var(--accent); box-shadow: 0 0 30px rgba(77, 166, 255, 0.4); transition: all 0.5s ease; display: flex; flex-direction: column; justify-content: space-between; z-index: 10003; }
+
+/* Flechas CSS Dinámicas (Usan var para deslizarse sin mover la caja entera) */
+.flecha-der::after { content: ''; position: absolute; right: -18px; top: var(--arrow-pos, 50%); transform: translateY(-50%); border-width: 15px 0 15px 18px; border-style: solid; border-color: transparent transparent transparent #222; z-index: 2; }
+.flecha-der::before { content: ''; position: absolute; right: -21px; top: var(--arrow-pos, 50%); transform: translateY(-50%); border-width: 18px 0 18px 21px; border-style: solid; border-color: transparent transparent transparent var(--accent); z-index: 1; }
+
+.flecha-izq::after { content: ''; position: absolute; left: -18px; top: var(--arrow-pos, 50%); transform: translateY(-50%); border-width: 15px 18px 15px 0; border-style: solid; border-color: transparent #222 transparent transparent; z-index: 2; }
+.flecha-izq::before { content: ''; position: absolute; left: -21px; top: var(--arrow-pos, 50%); transform: translateY(-50%); border-width: 18px 21px 18px 0; border-style: solid; border-color: transparent var(--accent) transparent transparent; z-index: 1; }
+
+/* Posiciones del Tutorial (Restauradas a tu versión original para no cortar texto) */
+.pos-center { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 550px; min-height: 200px; text-align: center; }
+.pos-palanca { top: 30%; right: 26%; transform: translateY(-50%); width: 350px; min-height: 200px; text-align: left; }
+.pos-tvc { bottom: 15%; right: 26%; width: 350px; min-height: 200px; text-align: left; }
+.pos-mapa { top: 32%; left: 32%; transform: translateY(-50%); width: 350px; min-height: 200px; text-align: left; }
+.pos-separar { bottom: 12%; right: 26%; width: 350px; min-height: 200px; text-align: left; }
+.pos-motor { top: 24%; left: 26%; transform: translateY(-50%); width: 350px; min-height: 190px; text-align: left; }
+.pos-avisos { top: 42%; left: 26%; transform: translateY(-50%); width: 350px; min-height: 190px; text-align: left; }
+.pos-telemetria { top: 74%; left: 26%; transform: translateY(-50%); width: 350px; min-height: 220px; text-align: left; }
+
+.instrucciones-box h1 { color: var(--accent); font-size: 22px; margin-top: 0; text-transform: uppercase; text-align: center; }
+
+#texto-paso-container { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+#texto-paso-container p { font-size: 16px; line-height: 1.5; color: #ddd; margin: 10px 0; }
+
+.controles-tutorial { display: flex; justify-content: space-between; gap: 10px; margin-top: 15px; }
+.btn-tut { flex: 1; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 6px; cursor: pointer; border: none; transition: 0.2s; }
+#btn-ant { background: #444; color: white; }
+#btn-ant:hover { background: #555; }
+#btn-saltar { background: transparent; color: #aaa; border: 1px solid #555; }
+#btn-saltar:hover { background: #333; color: white; }
+#btn-sig { background: var(--accent); color: white; }
+#btn-sig:hover { background: #3388dd; }
+
+.highlight-tutorial { position: relative; z-index: 10002 !important; box-shadow: 0 0 25px 5px rgba(77, 166, 255, 0.8) !important; border-color: var(--accent) !important; background-color: #1e1e1e !important; border-radius: 10px; pointer-events: none; }
+
+/* 3. PANELES LATERALES (configuración, copiloto, telemetría) */
+/* UI Base */
+#simulador-ui { display: flex; width: 100%; height: 100%; position: relative; }
+#panel-izq, #panel-der { width: 25%; background: var(--panel-bg); padding: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 10; border-right: 1px solid #333; overflow-y: auto; box-sizing: border-box; position: relative; }
+#panel-der { border-right: none; border-left: 1px solid #333; align-items: center; }
+
+h1, h2 { color: var(--accent); text-align: center; margin: 0 0 10px 0; font-size: 20px; text-transform: uppercase; }
+.box { background: #2a2a2a; padding: 12px; border-radius: 8px; border: 1px solid #333; width: 100%; box-sizing: border-box;}
+select { width: 100%; padding: 10px; background: #111; color: white; border: 1px solid #555; border-radius: 5px; font-size: 16px; margin-top: 5px; cursor: pointer; box-sizing: border-box;}
+
+#panel-alertas { min-height: 80px; width: 100%; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; font-size: 14px; border: 2px solid #555; background: #111; transition: 0.3s; padding: 10px; border-radius: 8px; box-sizing: border-box;}
+.alerta-normal { border-color: #555; color: #aaa; }
+.alerta-aviso { border-color: orange; color: orange; background: rgba(255, 165, 0, 0.1); }
+.alerta-exito { border-color: var(--success); color: var(--success); background: rgba(0, 255, 0, 0.1); }
+.alerta-peligro { border-color: var(--danger); color: var(--danger); background: rgba(255, 68, 68, 0.1); animation: parpadeo 0.5s infinite; }
+@keyframes parpadeo { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+.dato-fila { display: flex; justify-content: space-between; font-family: monospace; font-size: 14px; margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 4px; }
+.dato-val { font-weight: bold; color: var(--success); }
+.capa-val { color: #ffeb3b; font-weight: bold; }
+
+/* 4. PANTALLA CENTRAL (cielo, suelo, minimapa, basura, explosión) */
+/* Pantalla Central y Minimapa */
+#pantalla-central { width: 50%; position: relative; background-color: #87CEEB; display: flex; justify-content: center; overflow: hidden; transition: background-color 0.1s; z-index: 1; }
+#suelo { position: absolute; bottom: 0; width: 100%; height: 60px; background: #2e7d32; border-top: 4px solid #1b5e20; }
+
+#minimapa { position: absolute; left: 15px; top: 10%; bottom: 10%; width: 50px; background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 8px; display: flex; flex-direction: column; z-index: 20; padding: 2px; overflow: hidden; transition: 0.3s;}
+.mini-capa { flex: 1; border-top: 1px dashed rgba(255,255,255,0.2); position: relative; display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+.mini-capa:first-child { border-top: none; } 
+.mini-capa span { font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.8); writing-mode: vertical-rl; transform: rotate(180deg); }
+.mini-capa.activa { background: rgba(77, 166, 255, 0.6); box-shadow: inset 0 0 10px #4da6ff; }
+#mini-marcador { position: absolute; bottom: 0%; left: 52px; width: 0; height: 0; border-top: 6px solid transparent; border-bottom: 6px solid transparent; border-left: 12px solid var(--accent); transition: bottom 0.2s; z-index: 25;}
+
+#alerta-pantalla { position: absolute; top: 30%; width: 100%; text-align: center; font-size: 28px; font-weight: bold; color: var(--danger); text-shadow: 0 0 10px black; z-index: 20; display: none; pointer-events: none; }
+
+#mensaje-orbita { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 40px; font-weight: bold; color: #00ff00; text-shadow: 0 0 20px black; z-index: 50; display: none; opacity: 0; transition: opacity 1s; }
+
+#explosion { position: absolute; left: 50%; transform: translateX(-50%) scale(0.5); font-size: 100px; display: none; z-index: 100; transition: all 0.6s ease-out; opacity: 1; }
+
+.pedazo-basura { position: absolute; right: -100px; z-index: 5; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); display: none; }
+@keyframes pasarBasura { 0% { right: -100px; transform: rotate(0deg); } 100% { right: 120%; transform: rotate(720deg); } }
+
+#carga-suelta { position: absolute; font-size: 40px; display: none; z-index: 10; pointer-events: none; }
+
+/* 5. COHETE (etapas, aletas, toberas y fuego) */
+/* Cohetes */
+#cohete-ensamblaje { position: absolute; bottom: 60px; display: flex; flex-direction: column; align-items: center; transition: bottom 0.1s linear, filter 0.5s; z-index: 3; }
+.sacudir { animation: temblor 0.1s infinite; }
+@keyframes temblor { 0% { transform: translate(3px, 2px); } 50% { transform: translate(-3px, -2px); } 100% { transform: translate(3px, 2px); } }
+
+#cohete-rotacion { display: flex; flex-direction: column; align-items: center; transition: transform 0.1s linear; }
+
+.ojiva { border-bottom: 40px solid #ddd; border-left: 20px solid transparent; border-right: 20px solid transparent; height: 0; width: 0; z-index: 4; transition: opacity 0.5s; }
+
+#bloque-etapa2 { display: flex; flex-direction: column; align-items: center; z-index: 3; }
+.etapa2 { width: 40px; height: 60px; background: linear-gradient(to right, #999, #eee, #999); display: flex; justify-content: center; align-items: center; border-radius: 2px; }
+.texto-e2 { transform: rotate(-90deg); color: #333; font-weight: bold; font-size: 11px; letter-spacing: 1px; }
+.tobera-e2 { width: 14px; height: 8px; background: #444; border-radius: 0 0 3px 3px; display: none; } 
+.fuego-e2 { width: 12px; height: 30px; background: linear-gradient(to bottom, #fff, #4da6ff, transparent); border-radius: 50% 50% 0 0; transform: rotate(180deg); margin-top: -3px; animation: vibrar 0.1s infinite; display: none; }
+
+#bloque-etapa1 { display: flex; flex-direction: column; align-items: center; z-index: 2; transition: opacity 0.2s; }
+.separador { width: 40px; height: 4px; background: var(--danger); }
+.etapa1 { width: 40px; height: 100px; background: linear-gradient(to right, #ccc, #fff, #ccc); position: relative; display: flex; justify-content: center; align-items: center; border-radius: 2px; }
+.texto-e1 { transform: rotate(-90deg); color: #333; font-weight: bold; font-size: 12px; letter-spacing: 2px; }
+
+.aleta-izq { position: absolute; left: -15px; bottom: 0; border-bottom: 30px solid #555; border-left: 15px solid transparent; }
+.aleta-der { position: absolute; right: -15px; bottom: 0; border-bottom: 30px solid #555; border-right: 15px solid transparent; }
+.tobera { width: 24px; height: 12px; background: #333; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+.fuego-e1 { width: 16px; height: 45px; background: linear-gradient(to bottom, #fff, #ffa500, transparent); border-radius: 50% 50% 0 0; transform: rotate(180deg); margin-top: -5px; animation: vibrar 0.1s infinite; display: none; }
+
+@keyframes vibrar { 0% { transform: rotate(180deg) scaleY(1); } 50% { transform: rotate(180deg) scaleY(1.3); } 100% { transform: rotate(180deg) scaleY(1); } }
+
+#etapa1-cayendo { position: absolute; display: none; flex-direction: column; align-items: center; z-index: 2; left: 50%; transform: translateX(-50%); }
+
+/* 6. CONTROLES Y BARRAS (masa/combustible, palanca, TVC, botones) */
+/* Barras Laterales Centrales */
+.barra-lateral-container { position: absolute; bottom: 80px; width: 22px; height: 50%; background: rgba(0,0,0,0.7); border: 2px solid #555; border-radius: 10px; display: flex; flex-direction: column; justify-content: flex-end; padding: 2px; z-index: 5;}
+#caja-barra-masa { right: 90px; } 
+#caja-barra-comb { right: 30px; }
+.barra-fill { width: 100%; background: var(--accent); border-radius: 8px; transition: height 0.1s; }
+#fill-comb { background: orange; }
+.barra-label { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); text-align: center; font-size: 13px; font-weight: bold; background: #000; padding: 5px 8px; border-radius: 4px; border: 1px solid #444; z-index: 10; white-space: nowrap; }
+
+/* Contenedor Palanca y Sólido */
+.controles-motor-wrapper { width: 100%; height: 180px; margin: 15px 0; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+.throttle-container { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; background: #111; padding: 15px; border-radius: 10px; border: 2px solid #333; box-shadow: inset 0 0 15px black; box-sizing: border-box; transition: 0.3s; }
+.ranura-palanca { height: 100%; width: 40px; background: #000; border-radius: 20px; position: relative; border: 2px solid #444; display: flex; justify-content: center; }
+input[type=range] { writing-mode: bt-lr; -webkit-appearance: slider-vertical; width: 100%; height: 100%; margin: 0; outline: none; background: transparent; cursor: pointer; z-index: 2; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 60px; height: 25px; background: linear-gradient(to right, #666, #ccc, #666); border: 2px solid #222; border-radius: 5px; cursor: grab; box-shadow: 0 4px 6px rgba(0,0,0,0.8); }
+input[type=range]::-webkit-slider-thumb:active { cursor: grabbing; background: linear-gradient(to right, #888, #eee, #888); }
+
+#panel-solido-start { display: none; width: 100%; height: 100%; background: #222; border-radius: 10px; border: 2px solid #ff4444; flex-direction: column; justify-content: center; align-items: center; padding: 15px; box-sizing: border-box; text-align: center; }
+#btn-start-solido { background: #ff4444; border: 2px solid #cc0000; font-size: 18px; font-weight: bold; color: white; border-radius: 10px; cursor: pointer; transition: 0.3s; padding: 15px; width: 100%; box-shadow: 0 4px 10px rgba(255, 0, 0, 0.5); }
+#btn-start-solido:hover { background: #cc0000; }
+
+/* Panel TVC */
+#panel-tvc { display: none; width: 100%; text-align: center; margin-top: 10px; padding: 10px; background: #333; border-radius: 8px; border: 2px solid orange; box-sizing: border-box; transition: border-color 0.3s; }
+.btn-tvc { background: #555; color: white; border: 2px solid #aaa; padding: 10px; margin: 5px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 5px; width: 40%; transition: 0.1s; }
+.btn-tvc.activo { background: orange; color: black; }
+#ind-viento { font-weight: bold; color: orange; font-size: 14px; margin-bottom: 5px; transition: color 0.3s; }
+
+/* Botones de acción del juego */
+button.btn-juego { width: 100%; padding: 15px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; transition: 0.2s; margin-top: 10px; text-transform: uppercase; }
+
+#btn-separar { background: var(--danger); animation: parpadeo 1s infinite; color: white; }
+#btn-carga { background: #ffaa00; color: #000; animation: parpadeo 1.5s infinite; }
+
+/* Clase añadida para mantener los botones apagados y bloqueados al inicio */
+.btn-apagado {
+    background: #333 !important;
+    color: #777 !important;
+    animation: none !important;
+    pointer-events: none !important;
+    border: 2px solid #444 !important;
+}
+
+.btn-accion { background: var(--accent); color: white; margin-top: auto; width: 100%; padding: 15px; font-size: 14px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
+.btn-accion:hover { background: #3388dd; }
+
+/* 7. PANEL DE RESULTADOS (gráficas) */
+/* Resultados Flexibles */
+#panel-resultados { display: none; width: 100%; height: 100%; background: var(--bg-dark); padding: 20px; box-sizing: border-box; flex-direction: column; align-items: center; overflow-y: auto; z-index: 2000; }
+#res-tsiolkovski { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; padding: 12px 20px; width: 100%; max-width: 600px; box-sizing: border-box; margin-bottom: 10px; color: #ccc; }
+#res-tsiolkovski h3 { margin: 0 0 8px 0; font-size: 16px; color: var(--accent); text-align: center; }
+#res-tsiolkovski p { font-size: 13px; text-align: center; margin: 0 0 10px 0; color: #aaa; }
+.grid-graficas { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 1200px; margin-top: 10px; }
+.canvas-container { position: relative; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #333; width: calc(33.333% - 15px); height: 220px; box-sizing: border-box; }
+.canvas-container.bottom-row { width: calc(50% - 15px); }
+@media(max-width: 900px) { .canvas-container, .canvas-container.bottom-row { width: calc(50% - 15px); } }
+.canvas-container { cursor: zoom-in; transition: border-color 0.2s, transform 0.2s; }
+.canvas-container:hover { border-color: var(--accent); transform: translateY(-2px); }
+#res-ayuda { color: #888; font-size: 14px; margin: 15px 0 5px 0; }
+
+/* Gráfica ampliada */
+#modal-grafica { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 3000; justify-content: center; align-items: center; }
+.modal-grafica-contenido { position: relative; display: flex; gap: 20px; width: min(1200px, 95vw); height: min(640px, 90vh); background: #1e1e1e; border: 2px solid var(--accent); border-radius: 12px; padding: 20px; box-sizing: border-box; box-shadow: 0 0 30px rgba(77, 166, 255, 0.4); }
+.modal-grafica-chart { flex: 1 1 62%; position: relative; min-width: 0; }
+.modal-grafica-info { flex: 1 1 38%; overflow-y: auto; padding-right: 8px; color: #ddd; font-size: 14px; line-height: 1.5; user-select: text; }
+.modal-grafica-info h2 { margin: 0 30px 10px 0; font-size: 20px; color: var(--accent); }
+.modal-grafica-info h3 { margin: 16px 0 6px 0; font-size: 15px; color: #ffaa00; }
+.modal-grafica-info p { margin: 8px 0; }
+.modal-grafica-info ul { margin: 0; padding-left: 20px; }
+.modal-grafica-info li { margin: 3px 0; }
+#mg-informe { color: #888; font-size: 12px; border-top: 1px solid #333; padding-top: 8px; margin-top: 14px; }
+#cerrar-grafica { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border-radius: 50%; border: 1px solid #555; background: #333; color: white; font-size: 16px; cursor: pointer; z-index: 2; }
+#cerrar-grafica:hover { background: var(--danger); }
+@media(max-width: 900px) { .modal-grafica-contenido { flex-direction: column; overflow-y: auto; } .modal-grafica-chart { flex: 0 0 300px; } .modal-grafica-info { flex: 1 1 auto; overflow: visible; } }
+
+/* 8. MODAL DIDÁCTICO (motor sólido) */
+/* Modal Pausa/* Modal Pausa Didáctica Sólido */
+#modal-info { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; padding: 20px; box-sizing: border-box; text-align: center; }
+.modal-contenido { background: #222; border: 2px solid #ffaa00; padding: 30px; border-radius: 10px; max-width: 600px; font-size: 17px; line-height: 1.5; box-shadow: 0 0 20px rgba(255, 170, 0, 0.4); text-align: left; }
+.modal-titulo { color: #ffaa00; font-size: 24px; margin-top: 0; text-transform: uppercase; text-align: center; }
+.modal-btn { background: #ffaa00; color: black; padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; margin-top: 20px; width: 100%; display: block; }
+.modal-btn:hover { background: #e69900; }
